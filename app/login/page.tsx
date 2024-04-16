@@ -1,9 +1,61 @@
 "use client";
 import { Box, Typography, TextField, Button } from "@mui/material";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { initFirebase } from "@/firebase/firebaseapp";
 
 export default function Login() {
+	const app = initFirebase();
+	const auth = getAuth(app);
+	const router = useRouter();
+
+	//data
+	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
+
+	//error control
+	const [emailErr, setEmailErr] = useState("");
+	const [passwordErr, setPasswordErr] = useState("");
+
+	const handleLogin = async (form) => {
+		form.preventDefault();
+
+		setEmailErr("");
+		setPasswordErr("");
+
+		signInWithEmailAndPassword(auth, email, password)
+			.then(async (userCredential) => {
+				// Signed in
+				const user = userCredential.user;
+				router.push("/home");
+			})
+			.catch((error) => {
+				const errorCode = error.code;
+				const errorMessage = error.message;
+
+				switch (errorCode) {
+					case "auth/invalid-email":
+						setEmailErr("Please enter valid email");
+						break;
+					case "auth/wrong-password":
+						setPasswordErr("Incorrect password");
+						break;
+					case "auth/user-disabled":
+						setEmailErr("Account not enabled");
+						break;
+					case "auth/user-not-found":
+						setEmailErr("Account not found");
+						break;
+					default:
+						setEmailErr(errorMessage);
+						setPasswordErr(errorCode);
+						break;
+				}
+			});
+	};
+
 	return (
 		<main>
 			<Box
@@ -27,17 +79,20 @@ export default function Login() {
 						alignItems: "center",
 					}}
 				>
-                    Hello
-                </Box>
+					Hello
+				</Box>
 
 				<Box
 					component="form"
+					onSubmit={handleLogin}
+					noValidate
+					autoComplete="off"
 					sx={{
 						height: "100%",
 						width: "50%",
 						display: "grid",
 						gridTemplateColumns: "350px 350px",
-						gridTemplateRows: "30px 10px 30px 50px 50px 20px 50px",
+						gridTemplateRows: "30px 10px 30px 65px 65px 20px 50px",
 						gridTemplateAreas:
 							'"header header" "subtitle subtitle" "Switch Switch" "Email Email" "Password Password" ". Forgot" "Submit Submit"',
 						columnGap: "10px",
@@ -83,19 +138,25 @@ export default function Login() {
 						variant="outlined"
 						label="Email/Username"
 						type="text"
+						error={emailErr != ""}
+						helperText={emailErr}
+						onChange={(e) => setEmail(e.target.value)}
 					/>
 					<TextField
 						sx={{ gridArea: "Password" }}
 						variant="outlined"
 						label="Password"
 						type="password"
+						error={passwordErr != ""}
+						helperText={passwordErr}
+						onChange={(e) => setPassword(e.target.value)}
 					/>
 
 					<Button
 						variant="text"
 						sx={{ gridArea: "Forgot", justifySelf: "end" }}
 						onClick={() => {
-							redirect("/forgot-password");
+							router.push("/forgot-password");
 						}}
 					>
 						Forgot your password?

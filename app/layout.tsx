@@ -20,10 +20,12 @@ export default function RootLayout({
 			<Head>
 				<title>Match Making</title>
 			</Head>
-			<ThemeProvider theme={themeOptions}>
-				<CssBaseline />
-				<body>{children}</body>
-			</ThemeProvider>
+			<body>
+				<ThemeProvider theme={themeOptions}>
+					<CssBaseline />
+					{children}
+				</ThemeProvider>
+			</body>
 		</html>
 	);
 }
